@@ -8,12 +8,7 @@ import http from "@/utils/http";
 import {
   ITarefa,
   IUser,
-  ITransacao,
-  ICategoria,
 } from "@/interfaces/interfaces";
-import { customStyles } from "@/styles/ModalStyle";
-import ReactModal from "react-modal";
-import TaskForm from "@/components/forms/TaskForm";
 import Task from "@/components/Task";
 import Transacao from "@/components/Transacao";
 

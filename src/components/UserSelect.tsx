@@ -1,8 +1,8 @@
 import { ChangeEvent } from "react";
-import { User } from "../pages/admin";
+import { IUser } from "@/interfaces/interfaces";
 
 type UserSelectProps = {
-  users: User[];
+  users: IUser[];
   onUserSelect: (userId: number | null) => void;
 };
 
