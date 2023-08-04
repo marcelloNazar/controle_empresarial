@@ -1,23 +1,41 @@
-import { useEffect } from "react";
-import { useRouter } from "next/router";
-import { isAuthenticated, isAdmin } from "../utils/auth";
+import { parseCookies } from "nookies";
+import { GetServerSidePropsContext } from "next";
 
-const HomePage = () => {
-  const router = useRouter();
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const { token, role } = parseCookies(context);
 
-  useEffect(() => {
-    if (isAuthenticated()) {
-      if (isAdmin()) {
-        router.push("/admin");
-      } else {
-        router.push("/user");
-      }
-    } else {
-      router.push("/login");
-    }
-  }, []);
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
+  }
 
+  if (role === "ADMIN") {
+    return {
+      redirect: {
+        destination: "/admin",
+        permanent: false,
+      },
+    };
+  }
+
+  if (role === "USER") {
+    return {
+      redirect: {
+        destination: "/user",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+}
+
+export default function Home() {
   return <div />;
-};
-
-export default HomePage;
+}

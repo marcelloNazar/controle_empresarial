@@ -1,114 +1,130 @@
+import { parseCookies } from "nookies";
+import { GetServerSidePropsContext } from "next";
+import Header from "@/components/Header";
+import Head from "next/head";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { isAdmin, isAuthenticated, getToken } from "../utils/auth";
-import Header from "../components/Header";
+import http from "@/utils/http";
+import {
+  ITarefa,
+  IUser,
+  ITransacao,
+  ICategoria,
+} from "@/interfaces/interfaces";
+import { customStyles } from "@/styles/ModalStyle";
+import ReactModal from "react-modal";
+import TaskForm from "@/components/forms/TaskForm";
+import Task from "@/components/Task";
+import Transacao from "@/components/Transacao";
 
-export type Task = {
-  id: number;
-  titulo: string;
-  descricao: string;
-  feito: boolean;
-  data: string;
-  assignedTo: {
-    id: number;
-    username: string;
-    role: string;
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const { token } = parseCookies(context);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
   };
-};
-
-export type User = {
-  id: number;
-  username: string;
-  role: string;
-};
-
-type TaskResponse = {
-  content: Task[];
-};
-
-type UserResponse = {
-  content: User[];
-};
+}
 
 const AdminHomePage = () => {
   const router = useRouter();
 
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [tasks, setTasks] = useState<ITarefa[]>([]);
+  const [transacao, setTransacao] = useState<ITarefa[]>([]);
+  const [categoria, setCategoria] = useState<ITarefa[]>([]);
+  const [funcionarios, setFuncionarios] = useState<IUser[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [modalIsOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated() || !isAdmin()) {
-      router.push("/login");
-    }
+    fetchFuncionarios();
   }, []);
 
-  useEffect(() => {
-    const token = getToken();
+  const fetchFuncionarios = () => {
+    http
+      .get("admin/usuarios")
+      .then((r) => setFuncionarios(r.data.content))
+      .catch((e) => {
+        console.error("Erro:", e);
+      });
+  };
 
-    const requestOptions = {
-      headers: { Authorization: "Bearer " + token },
-    };
-    fetch("http://localhost:8080/admin/usuarios", requestOptions)
-      .then((res) => res.json())
-      .then((data: UserResponse) => setUsers(data.content))
-      .catch((err) => console.error(err));
-  }, []);
+  const fetchTarefas = () => {
+    http
+      .get("admin/tarefa")
+      .then((r) => setTasks(r.data.content))
+      .catch((e) => {
+        console.error("Erro:", e);
+      });
+  };
 
-  useEffect(() => {
-    const token = getToken();
+  const fetchTransacao = () => {
+    http
+      .get("admin/transacao")
+      .then((r) => setTransacao(r.data.content))
+      .catch((e) => {
+        console.error("Erro:", e);
+      });
+  };
 
-    const requestOptions = {
-      headers: { Authorization: "Bearer " + token },
-    };
-    if (selectedUser !== null) {
-      fetch(
-        `http://localhost:8080/admin/tarefa/user/${selectedUser}`,
-        requestOptions
-      )
-        .then((res) => res.json())
-        .then((data: TaskResponse) => setTasks(data.content))
-        .catch((err) => console.error(err));
+  const fetchCategoria = () => {
+    http
+      .get("user/categoria")
+      .then((r) => setTransacao(r.data.content))
+      .catch((e) => {
+        console.error("Erro:", e);
+      });
+  };
+
+  const handleSubmit = (data: Partial<ITarefa>) => {
+    if (selected) {
+      const taskData = {
+        ...data,
+        assignedToId: selected,
+      };
+      console.log(taskData);
+      http
+        .post("admin/tarefa", taskData)
+        .then((response) => {
+          if (response.status === 201) {
+            fetchTarefas();
+            closeModal();
+          } else {
+            alert("Erro ao adicionar o animal");
+          }
+        })
+        .catch((error) => {
+          console.error("Erro:", error);
+        });
     }
-  }, [selectedUser]);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
 
   return (
-    <div className="bg-gray-800 min-h-screen">
-      <Header />
-      <div className="container mx-auto py-12">
-        <h1 className="text-2xl font-semibold mb-6">
-          Welcome to the Admin Home Page
-        </h1>
-        <div className="flex justify-center">
-          <div className="w-1/3 bg-slate-600 rounded h-max p-4">
-            <h2 className="text-xl font-semibold mb-4">Tasks</h2>
-            <div className="mb-4">
-              <label>
-                Select user:
-                <select
-                  className="ml-2 border text-black rounded px-2 py-1"
-                  onChange={(e) => setSelectedUser(Number(e.target.value))}
-                >
-                  <option value="">Select user...</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.username}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {tasks.map((task) => (
-              <div key={task.id} className="flex jus">
-                <h3 className="font-semibold">{task.titulo}</h3>
-                <p>{task.descricao}</p>
-                <p>{task.feito ? "Done" : "Pending"}</p>
-                <p>Due: {task.data}</p>
-              </div>
-            ))}
+    <div className="w-full h-screen flex bg-gray-950 text-black">
+      <header className="h-10 w-full absolute items-center top-0">
+        <Header />
+      </header>
+      <div className="w-full flex  max-w-6xl mx-auto ">
+        <main className="flex pt-10 w-full h-full ">
+          <div className="w-1/2 h-full p-2 pr-1">
+            <Task />
           </div>
-          <div className="w-1/2 pl-4">{/* Placeholder for right side */}</div>
-        </div>
+          <div className="w-1/2 h-full p-2 pl-1">
+            <Transacao />
+          </div>
+        </main>
       </div>
     </div>
   );

@@ -1,16 +1,29 @@
-import { useEffect } from "react";
+import { parseCookies } from "nookies";
+import { GetServerSidePropsContext } from "next";
+import Header from "@/components/Header";
+import Head from "next/head";
+import { useState } from "react";
 import { useRouter } from "next/router";
-import { isAdmin, isAuthenticated } from "../utils/auth";
-import Header from "../components/Header";
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const { token } = parseCookies(context);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+}
 
 const UserHomePage = () => {
   const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated() || isAdmin()) {
-      router.push("/login");
-    }
-  }, []);
 
   return (
     <div>

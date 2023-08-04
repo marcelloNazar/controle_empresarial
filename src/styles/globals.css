@@ -25,3 +25,45 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+@layer base {
+  h1 {
+    @apply text-2xl;
+  }
+}
+
+@layer components {
+  .container {
+    @apply flex flex-col w-full h-full justify-center items-center bg-black rounded transition duration-100;
+  }
+  .coluna {
+    @apply flex flex-col w-full h-full justify-start items-center;
+  }
+  .linha {
+    @apply flex w-full justify-between items-center px-2;
+  }
+  .lista {
+    @apply flex flex-col w-full h-full overflow-auto px-2 mt-2;
+  }
+  .item-list {
+    @apply flex justify-between rounded bg-white cursor-pointer shadow-gray-500 px-1 mb-1 w-full hover:shadow-md;
+  }
+  .dados {
+    @apply flex px-2 border-r justify-start;
+  }
+  .botao {
+    @apply bg-green-600 text-white rounded px-2 py-1 text-base transform transition duration-200 hover:opacity-90 hover:shadow-lg hover:scale-105;
+  }
+  .input {
+    @apply m-1 px-4 py-1 border w-full rounded bg-white text-black outline-none focus:border-2 focus:border-gray-900;
+  }
+  .modal-container {
+    @apply flex flex-col justify-start items-center h-full w-full text-black bg-white overflow-hidden;
+  }
+  .modal-header {
+    @apply flex justify-between items-center w-full px-3 mb-2;
+  }
+  .body-modal {
+    @apply flex flex-col w-full h-full justify-start;
+  }
+}
